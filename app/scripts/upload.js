@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 // XTK uncompiled
 goog.require('X.parserDCM');
