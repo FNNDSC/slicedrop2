@@ -1,15 +1,16 @@
+'use strict';
+
 // XTK uncompiled
 goog.require('X.parserDCM');
 goog.require('X.parser');
 
-
-upload = function(db){
-  // variables of interest
-  this.files = [];
-  this.filesLoaded = [];
-  this.totalSize = 0;
-  this.totalProgress = 0;
-  this.db = db;
+var Upload = function(db){
+    // variables of interest
+    this.files = [];
+    this.filesLoaded = [];
+    this.totalSize = 0;
+    this.totalProgress = 0;
+    this.db = db;
 };
 
 /**
@@ -19,147 +20,148 @@ upload = function(db){
 * 3- Progress callbacks
 * 4- IndexDB storage
 */
-upload.prototype.setup = function(){
+Upload.prototype.setup = function(){
 
-  window.console.log("setup - setup");
+    window.console.log('setup - setup');
 
-  this.setupFileDrop();
-  this.setupFileSelect();
+    this.setupFileDrop();
+    this.setupFileSelect();
 };
 
-upload.prototype.addFile = function(fileObject){
-  // update the list of files we have
-  this.files.push(fileObject);
-  // update the total size of data we want to upload
-  this.totalSize += fileObject.size;
-}
+Upload.prototype.addFile = function(fileObject){
+    // update the list of files we have
+    this.files.push(fileObject);
+    // update the total size of data we want to upload
+    this.totalSize += fileObject.size;
+};
 
-upload.prototype.work = function(fileObject){
-  //
-  // add callback for status to do whatever we want
-  //
+Upload.prototype.work = function(fileObject){
+    //
+    // add callback for status to do whatever we want
+    //
 
-  this.addFile(fileObject);
-  // start reading it with a webworker!
-  var myWorker = new Worker("scripts/ww_load.js");
-  var _this = this;
-  myWorker.onmessage = function (oEvent) {
-    if(oEvent.data.status == "progress"){
-      var percentLoaded = Math.round((oEvent.data.loaded / oEvent.data.total) * 100);
-    }
-    else if(oEvent.data.status == "load"){
-      // file has been loaded
-      window.console.log(fileObject.name + " loaded!!!");
-      var object2 = { name: escape(fileObject.name),
+    this.addFile(fileObject);
+    // start reading it with a webworker!
+    var myWorker = new Worker('scripts/ww_load.js');
+    var _this = this;
+    myWorker.onmessage = function (oEvent) {
+        if(oEvent.data.status === 'progress'){
+            //var percentLoaded = Math.round((oEvent.data.loaded / oEvent.data.total) * 100);
+        }
+        else if(oEvent.data.status === 'load'){
+            // file has been loaded
+            window.console.log(fileObject.name + ' loaded!!!');
+            var object2 = { name: escape(fileObject.name),
                      size: fileObject.size,
                      file: fileObject,
                      content: oEvent.data.content};
-      _this.filesLoaded.push(object2);
-       // window.console.log(oEvent.data.content);
-      // window.console.log(fileObject.size);
-      // parse file header in XTK...!
-      // if not parsable zip, extract it!
+            _this.filesLoaded.push(object2);
+            // window.console.log(oEvent.data.content);
+            // window.console.log(fileObject.size);
+            // parse file header in XTK...!
+            // if not parsable zip, extract it!
 
-        // call X parser// instantiate the parser
-     var _parser = new X.parserDCM();
+            // call X parser// instantiate the parser
+            var _parser = new X.parserDCM();
 
-     var data = oEvent.data.content;
-     data.byteLength = fileObject.size;
+            var data = oEvent.data.content;
+            data.byteLength = fileObject.size;
 
-     var container = new X.file();
-     var object = new X.object();
-     object._file = [];
-     var flag = {};
-     _parser.parse(container, object, data, flag);
+            var container = new X.file();
+            var object = new X.object();
+            object._file = [];
+            var flag = {};
+            _parser.parse(container, object, data, flag);
 
-     object2.uid = object.slices[0].sop_instance_uid;
-     object2.file = null;
+            object2.uid = object.slices[0].sop_instance_uid;
+            object2.file = null;
 
-     object2.content = object2.content;
-     _this.db.addData(object2);
-    }
-  };
+            object2.content = object2.content;
+            _this.db.addData(object2);
+        }
+    };
 
-  myWorker.postMessage(fileObject);
+    myWorker.postMessage(fileObject);
 };
 
-upload.prototype.setupFileDrop = function(){
+Upload.prototype.setupFileDrop = function(){
 
-  window.console.log("setup - setupFileDrop");
-  var _this = this;
+    window.console.log('setup - setupFileDrop');
+    var _this = this;
 
-  function handleFileSelect(evt) {
-    evt.stopPropagation();
-    evt.preventDefault();
+    function handleFileSelect(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
 
-    evt.target.style.border = "";
+        evt.target.style.border = '';
 
-    var files = evt.dataTransfer.files; // FileList object.
+        var files = evt.dataTransfer.files; // FileList object.
 
-    // files is a FileList of File objects. List some properties.
-    // var output = [];
-    for (var i = 0, f; f = files[i]; i++) {
-      var fileObject = {"name": escape(f.name),
-                        "size": f.size,
-                        "uploaded": -1,
-                        "file": f};
-      _this.work(fileObject);
+        // files is a FileList of File objects. List some properties.
+        // var output = [];
+        for (var i = 0, f; f = files[i]; i++) {
+            var fileObject = {'name': escape(f.name),
+                        'size': f.size,
+                        'uploaded': -1,
+                        'file': f};
+            _this.work(fileObject);
+        }
     }
-  }
 
-  function handleDragOver(evt) {
-    evt.stopPropagation();
-    evt.preventDefault();
-    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-  }
+    function handleDragOver(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+        evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+    }
 
-  function handleDragEnter(evt) {
-    evt.stopPropagation();
-    evt.preventDefault();
-    evt.target.style.border = "3px solid black";
-  }
+    function handleDragEnter(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+        evt.target.style.border = '3px solid black';
+    }
 
-  function handleDragLeave(evt) {
-    evt.stopPropagation();
-    evt.preventDefault();
-    evt.target.style.border = "";
-  }
+    function handleDragLeave(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+        evt.target.style.border = '';
+    }
 
-  // Setup the dnd listeners.
-  var dropZone = document.getElementById('drop_zone');
-  dropZone.addEventListener('dragover', handleDragOver, false);
-  dropZone.addEventListener('drop', handleFileSelect, false);
-  dropZone.addEventListener('dragenter', handleDragEnter, false);
-  dropZone.addEventListener('dragleave', handleDragLeave, false);
+    // Setup the dnd listeners.
+    var dropZone = document.getElementById('drop_zone');
+    dropZone.addEventListener('dragover', handleDragOver, false);
+    dropZone.addEventListener('drop', handleFileSelect, false);
+    dropZone.addEventListener('dragenter', handleDragEnter, false);
+    dropZone.addEventListener('dragleave', handleDragLeave, false);
+
 };
 
-upload.prototype.setupFileSelect = function(){
+Upload.prototype.setupFileSelect = function(){
 
-  window.console.log("setup - setupFileSelect");
-  var _this = this;
+    window.console.log('setup - setupFileSelect');
+    var _this = this;
 
-  // Check for the various File API support.
-  if (window.File && window.FileReader && window.FileList && window.Blob) {
-    // Great success! All the File APIs are supported.
-  } else {
-    alert('The File APIs are not fully supported in this browser.');
-  }
-
-  function handleFileSelect(evt) {
-    var files = evt.target.files; // FileList object
-
-    // files is a FileList of File objects. List some properties.
-    // var output = [];
-    for (var i = 0, f; f = files[i]; i++) {
-      var fileObject = {"name": escape(f.name),
-                        "size": f.size,
-                        "uploaded": -1,
-                        "file": f};
-      _this.work(fileObject);
+    // Check for the various File API support.
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+        // Great success! All the File APIs are supported.
+    } else {
+        alert('The File APIs are not fully supported in this browser.');
     }
-  }
 
-  document.getElementById('files').addEventListener('change', handleFileSelect, false);
+    function handleFileSelect(evt) {
+        var files = evt.target.files; // FileList object
+
+        // files is a FileList of File objects. List some properties.
+        // var output = [];
+        for (var i = 0, f; f = files[i]; i++) {
+            var fileObject = {'name': escape(f.name),
+                        'size': f.size,
+                        'uploaded': -1,
+                        'file': f};
+            _this.work(fileObject);
+        }
+    }
+
+    document.getElementById('files').addEventListener('change', handleFileSelect, false);
 };
 
 

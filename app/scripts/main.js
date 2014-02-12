@@ -1,9 +1,12 @@
-console.log('\'Allo \'main!');
+'use strict';
 
-init = (function() {
+function init() {
 
-  sd2 = new slicedrop2();
-  sd2.init();
-})();
+    console.log('\'Allo \'main!');
+    
+    var sd2 = new Slicedrop2();
+    sd2.init();
 
-window.addEventListener("DOMContentLoaded", init, false);
+}
+
+window.addEventListener('DOMContentLoaded', init, false);
