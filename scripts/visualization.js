@@ -1,11 +1,5 @@
 'use strict';
 
-// XTK uncompiled
-goog.require('X.parserDCM');
-goog.require('X.parser');
-// XTK uncompiled
-goog.require('X.renderer3D');
-
 var Visualization = function(db){
     this.db = db;
     this.r3d = null;
