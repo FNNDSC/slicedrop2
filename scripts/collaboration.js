@@ -187,4 +187,3 @@ window.console.log("fullString: " + fullString.length);
 //   } finally {
 //     visibilityChangeFromRemote = false;
 //   }
-// });
