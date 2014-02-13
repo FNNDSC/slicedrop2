@@ -1,9 +1,5 @@
 // 'use strict';
 
-// XTK uncompiled
-goog.require('X.parserDCM');
-goog.require('X.parser');
-
 var Upload = function(db){
     // variables of interest
     this.files = [];

@@ -35,6 +35,8 @@ Visualization.prototype.setup = function(){
         _this.cleanUI();
         // Re-render all the todo's
         _this.db.getAllDataItems(function(e){ _this.onsuccessGetAllDataItems(e); });
+    
+    }, false);
 
     // add data (more ddrop)
     document.addEventListener('dbRemoved', function (e) {
