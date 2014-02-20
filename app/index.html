@@ -21,8 +21,19 @@
         <link rel="stylesheet" href="styles/main.css">
         <!-- endbuild -->
         <script src="bower_components/modernizr/modernizr.js"></script>
-        <script>//var TogetherJSConfig_findRoom = {prefix: "slicedrop", max: 5};</script>
-        <script src="https://togetherjs.com/togetherjs-min.js"></script>
+        <script>//var TogetherJSConfig_ignoreMessages = true;</script>
+      <!--    <script src="bower_components/togetherjs/build/togetherjs.js"></script>-->
+      <script>
+// var TogetherJSConfig_something = "foo";
+
+// var TogetherJSConfig_findRoom = {prefix: "75.126.93.124:80?transport=udp", max: 5}
+
+// "iceServers":[{"url":"stun:75.126.93.124:80"},{"username":"880f6ac1-b764-4364-1a58-dfd8e8a36dd3","url":"turn:75.126.93.124:80?transport=udp","credential":"16ef79bf-16a4-4631-928f-96787cf1ff12"},{"username":"880f6ac1-b764-4364-1a58-dfd8e8a36dd3","url":"turn:75.126.93.124:80?transport=tcp","credential":"16ef79bf-16a4-4631-928f-96787cf1ff12"}]
+
+// more config...
+</script>
+      <script src="static/togetherjs-min.js"></script>
+      
     </head>
     <body>
         <!--[if lt IE 10]>
@@ -39,8 +50,8 @@
                 </ul> -->
                 <h3 class="text-muted">slicedrop2</h3>
             </div>
-            <h1>Collaborate</h1>
-            <button onclick="TogetherJS(this); return false;">Start TogetherJS</button>
+            <h1>Collaborate <button class="btn btn-primary" onclick="TogetherJS(this); return false;">Start TogetherJS</button></h1>
+            
             <h1>3D renderer</h1>
             <div id='3d' class='threeDRenderer' style="height: 450px; background-color:#353535;"></div>
             <h1>Drag And Drop files here!</h1>
@@ -48,7 +59,7 @@
             </div>
             <h1>Button files here!</h1>
             <input type="file" id="files" name="files[]" multiple />
-            <h1>Files in DB!</h1>
+            <h1>Files in databtase <button id="flush" class="btn btn-danger">Flush DB</button></h1>
             <ul id="dataItems"></ul>
 
             <div class="footer">
@@ -95,6 +106,7 @@
         <!-- <script type="text/javascript" src="http://get.goXTK.com/xtk.js"></script>-->
         <script src="scripts/utils.js"></script>
         <script src="scripts/db.js"></script>
+        <script src="scripts/ww_load.js"></script>
         <script src="scripts/upload.js"></script>
         <script src="scripts/visualization.js"></script>
         <script src="scripts/collaboration.js"></script>

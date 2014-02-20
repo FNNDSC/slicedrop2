@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 var Db = function(){
     // In the following line, you should include the prefixes of implementations you want to test.
@@ -97,6 +97,8 @@ Db.prototype.deleteData = function(id) {
     var store = trans.objectStore('data');
     var request = store.delete(id);
 
+    window.console.log('deleting data');
+
     request.onsuccess = function() {
         // trigger event!
         var event = new Event('dbRemoved');
@@ -105,4 +107,21 @@ Db.prototype.deleteData = function(id) {
     };
 
     request.onerror = this.onerror;
+};
+
+
+// http://stackoverflow.com/questions/14439573/indexeddb-object-store-save-as-file
+
+Db.prototype.deleteAll = function() {
+    window.console.log('Delete All!');
+    var db = this.db;
+    var _this = this; 
+    _this.getAllDataItems(function(e){ 
+        var result = e.target.result;
+        if(!!result == false){
+            return;
+        };
+        _this.deleteData(e.target.result.key);
+result.continue();
+    });
 };

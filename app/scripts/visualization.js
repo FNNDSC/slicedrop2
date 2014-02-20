@@ -48,6 +48,10 @@ Visualization.prototype.setup = function(){
 
     }, false);
 
+    $( "#flush" ).on( "click", function() {
+      _this.db.deleteAll();
+    });
+
 };
 
 // CLEAN UI
@@ -64,7 +68,7 @@ Visualization.prototype.renderData = function(row) {
     var li = document.createElement('li');
     var x = document.createElement('a');
     var a = document.createElement('a');
-    var t = document.createTextNode( row.name + ' ');
+    var t = document.createTextNode( row.name + ' [' + row.size + 'kb] ');
 
     x.addEventListener('click', function(e) {
 

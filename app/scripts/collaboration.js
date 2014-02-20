@@ -5,6 +5,8 @@ var Collaboration = function(db){
     this.tmp = {};
     this.tmp2 = {};
     this.status = {};
+    this.pool = new Pool(1);
+    this.pool.init();
 };
 
 Collaboration.prototype.setup = function(){
@@ -121,17 +123,26 @@ Collaboration.prototype.onsuccessSendAllDataItems = function(e) {
 
         var fullString = '';
         for (offset = 0; offset < abLen; offset += CHUNK_SIZE) {
-            len = Math.min(CHUNK_SIZE, abLen-offset);
+
+len = Math.min(CHUNK_SIZE, abLen-offset);
             // subab = ab.subarray(offset, offset+len);
             var string = String.fromCharCode.apply(null,ab.subarray(offset, offset+len));
-            window.console.log("index: " + index + "  size: " + string.length);
-            TogetherJS.send({type: 'dataSend', name: result.value.name, content: string, uid: result.value.uid, total: total, index: index });
+            // window.console.log("index: " + index + "  size: " + string.length);
+            // add command to queue
+            // TogetherJS.send();
+            // "server-echo": true, 
+            var worker = new WorkerTask({type: 'dataSend', name: result.value.name, content: string, uid: result.value.uid, total: total, index: index }, result.value.name);
+            this.pool.addWorkerTask(worker);
+            // this.taskQueue.push({type: 'dataSend', name: result.value.name, content: string, uid: result.value.uid, total: total, index: index });
+            // window.console.log(this.taskQueue);
             //str += String.fromCharCode.apply(null, subab);
             index++;
             fullString += string;
+
+            
         }
 
-window.console.log("fullString: " + fullString.length);
+// window.console.log("fullString: " + fullString.length);
         // TogetherJS.send({type: 'dataSend', name: result.value.name, content: ab2str(result.value.content), uid: result.value.uid });
 
         result.continue();
@@ -188,3 +199,95 @@ window.console.log("fullString: " + fullString.length);
 //     visibilityChangeFromRemote = false;
 //   }
 // });
+
+// http://www.smartjava.org/content/html5-easily-parallelize-jobs-using-web-workers-and-threadpool
+function Pool(size) {
+    var _this = this;
+
+    // set some defaults
+    this.taskQueue = [];
+    this.workerQueue = [];
+    this.poolSize = size;
+ 
+    this.addWorkerTask = function(workerTask) {
+        // window.console.log('Add worker');
+        // window.console.log(_this.workerQueue);
+        // window.console.log(_this.taskQueue);
+        if (_this.workerQueue.length > 0) {
+            // get the worker from the front of the queue
+            var workerThread = _this.workerQueue.shift();
+            workerThread.run(workerTask);
+        } else {
+            // no free workers,
+            _this.taskQueue.push(workerTask);
+        }
+
+        // window.console.log(_this.taskQueue);
+    }
+ 
+    this.init = function() {
+        // create 'size' number of worker threads
+        for (var i = 0 ; i < size ; i++) {
+            _this.workerQueue.push(new WorkerThread(_this));
+        }
+     }
+ 
+    this.freeWorkerThread = function(workerThread) {
+        // window.console.log('in free thread callback');
+        // window.console.log(_this.taskQueue);
+        if (_this.taskQueue.length > 0) {
+            // don't put back in queue, but execute next task
+            var workerTask = _this.taskQueue.shift();
+            workerThread.run(workerTask);
+        } else {
+            _this.workerQueue.push(workerThread);
+        }
+    }
+}
+ 
+// runner work tasks in the pool
+function WorkerThread(parentPool) {
+ 
+    var _this = this;
+ 
+    this.parentPool = parentPool;
+    this.workerTask = {};
+ 
+    this.run = function(workerTask) {
+        _this.workerTask = workerTask;
+        // send websocket
+        if (_this.workerTask.script!= null) {
+
+            // callback when finished to clean up pool
+            setTimeout(function(){TogetherJS.send(_this.workerTask.script);_this.dummyCallback('yo')}, 50);
+            
+            // wait 1 s
+
+            // go for dummy callback
+
+            // var worker = new Worker(workerTask.script);
+            // worker.addEventListener('message', dummyCallback, false);
+            // worker.postMessage(workerTask.startMessage);
+        }
+    }
+ 
+    // for now assume we only get a single callback from a worker
+    // which also indicates the end of this worker.
+    this.dummyCallback = function(event) {
+        // window.console.log('in dummy callback');
+        // pass to original callback
+        // _this.workerTask.callback(event);
+ 
+        // we should use a seperate thread to add the worker
+        _this.parentPool.freeWorkerThread(_this);
+    }
+ 
+}
+ 
+// task to run
+function WorkerTask(object, msg) {
+ 
+    this.script = object;
+    // this.callback = callback;
+    this.startMessage = msg;
+};
